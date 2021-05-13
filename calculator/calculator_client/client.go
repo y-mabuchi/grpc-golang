@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"time"
 
 	"github.com/y-mabuchi/grpc-golang/calculator/calculatorpb"
 	"google.golang.org/grpc"
@@ -24,8 +25,8 @@ func main() {
 	// fmt.Printf("Created client: %f", c)
 
 	// doSum(c)
-
-	doPrime(c)
+	// doPrime(c)
+	doAverage(c)
 }
 
 func doSum(c calculatorpb.CalculatorServiceClient) {
@@ -61,4 +62,40 @@ func doPrime(c calculatorpb.CalculatorServiceClient) {
 		}
 		log.Printf("Response from PrimeNumberDecomposition: %v", msg.GetResult())
 	}
+}
+
+func doAverage(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Starting to do a ComputeAverage Client Streaming RPC...")
+
+	requests := []*calculatorpb.ComputeAverageRequest{
+		&calculatorpb.ComputeAverageRequest{
+			Number: 1,
+		},
+		&calculatorpb.ComputeAverageRequest{
+			Number: 2,
+		},
+		&calculatorpb.ComputeAverageRequest{
+			Number: 3,
+		},
+		&calculatorpb.ComputeAverageRequest{
+			Number: 4,
+		},
+	}
+
+	stream, err := c.ComputeAverage(context.Background())
+	if err != nil {
+		log.Fatalf("error while calling ComputeAverage: %v", err)
+	}
+
+	for _, req := range requests {
+		log.Printf("Sending req: %v", req)
+		stream.Send(req)
+		time.Sleep(1 * time.Second)
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error while receiving response from ComputeAverage: %v", err)
+	}
+	fmt.Printf("ComputeAverage Response: %v\n", res)
 }
