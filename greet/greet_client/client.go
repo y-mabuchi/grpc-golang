@@ -18,6 +18,15 @@ import (
 func main() {
 	fmt.Println("Hello I'm a client")
 
+	// certFile := "ssl/ca.crt" // Certificate Authority Trust certificate
+	// creds, sslErr := credentials.NewClientTLSFromFile(certFile, "")
+	// if sslErr != nil {
+	// 	log.Fatalf("Error while loading CA trust certificate: %v\n", sslErr)
+	// 	return
+	// }
+	//
+	// opts := grpc.WithTransportCredentials(creds)
+
 	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("could not connect: %v", err)
@@ -28,12 +37,12 @@ func main() {
 	c := greetpb.NewGreetServiceClient(cc)
 	// fmt.Printf("Created client: %f", c)
 
-	// doUnary(c)
+	doUnary(c)
 	// doSeverStreaming(c)
 	// doClientStreaming(c)
 	// doBiDiStreaming(c)
-	doUnaryWithDeadline(c, 5*time.Second) // should complete
-	doUnaryWithDeadline(c, 1*time.Second) // should timeout
+	// doUnaryWithDeadline(c, 5*time.Second) // should complete
+	// doUnaryWithDeadline(c, 1*time.Second) // should timeout
 }
 
 func doUnary(c greetpb.GreetServiceClient) {
