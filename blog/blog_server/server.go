@@ -177,7 +177,7 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
 	fmt.Println("List blog request")
 
-	cur, err := collection.Find(context.Background(), nil)
+	cur, err := collection.Find(context.Background(), primitive.D{{}})
 	if err != nil {
 		return status.Errorf(
 			codes.Internal,
@@ -187,19 +187,24 @@ func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_L
 
 	for cur.Next(context.Background()) {
 		data := &blogItem{}
-		err := cur.Decode(data)
-		if err != nil {
+		decodeErr := cur.Decode(data)
+		if decodeErr != nil {
 			return status.Errorf(
 				codes.Internal,
-				fmt.Sprintf("Error while decoding data from mongoDB: %v\n", err))
+				fmt.Sprintf("Error while decoding data from mongoDB: %v\n", decodeErr))
 		}
-		stream.Send(&blogpb.ListBlogResponse{Blog: dataToBlogPb(data)})
+		sendErr := stream.Send(&blogpb.ListBlogResponse{Blog: dataToBlogPb(data)})
+		if sendErr != nil {
+			return status.Errorf(
+				codes.Internal,
+				fmt.Sprintf("Error while sending data from MongoDB: %v\n", sendErr))
+		}
 	}
 
-	if err := cur.Err(); err != nil {
+	if curErr := cur.Err(); curErr != nil {
 		return status.Errorf(
 			codes.Internal,
-			fmt.Sprintf("Unknown internal error: %v\n", err),
+			fmt.Sprintf("Unknown internal error: %v\n", curErr),
 		)
 	}
 
