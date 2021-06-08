@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"time"
 
+	"google.golang.org/grpc/reflection"
+
 	"go.mongodb.org/mongo-driver/bson"
 
 	"google.golang.org/grpc/codes"
@@ -244,6 +246,9 @@ func main() {
 	opts := []grpc.ServerOption{}
 	s := grpc.NewServer(opts...)
 	blogpb.RegisterBlogServiceServer(s, &server{})
+
+	// Register reflection service on gRPC server.
+	reflection.Register(s)
 
 	go func() {
 		fmt.Println("Starting Server...")
